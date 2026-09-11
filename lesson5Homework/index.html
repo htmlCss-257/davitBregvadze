@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simple Essentials Shop</title>
+
+  <link rel="stylesheet" href="./styles/style.css">
+
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <header>
+    <div class="nav-container">
+      <a href="#" class="logo">🌿 DailyGoods</a>
+      <button class="cart-btn" onclick="toggleCart()">
+        Cart <span class="badge" id="cart-badge">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Intro -->
+  <div class="hero">
+    <h1>Simple Everyday Essentials</h1>
+    <p>Hand-picked, minimalist products for your everyday workspace and home.</p>
+  </div>
+
+  <!-- Product Catalog -->
+  <main>
+    <div class="products-grid" id="product-grid"></div>
+  </main>
+
+  <!-- Sliding Cart Panel -->
+  <div class="drawer-overlay" id="overlay" onclick="toggleCart()"></div>
+  <aside class="cart-drawer" id="cart-drawer">
+    <div class="drawer-header">
+      <h2>Your Basket</h2>
+      <button class="close-btn" onclick="toggleCart()">&times;</button>
+    </div>
+
+    <ul class="cart-items" id="cart-items">
+      <!-- Items will render here -->
+    </ul>
+
+    <div class="drawer-footer">
+      <div class="total-row">
+        <span>Total:</span>
+        <span id="cart-total">$0.00</span>
+      </div>
+      <button class="checkout-btn" onclick="checkout()">Proceed to Checkout</button>
+    </div>
+  </aside>
+
+  <script>
+    // 1. Data: Simple everyday items
+    const products = [
+      {
+        id: 1,
+        name: "Ceramic Coffee Mug",
+        price: 14.0,
+        desc: "Matte-finish ceramic mug, 350ml capacity.",
+        image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400&auto=format&fit=crop&q=60"
+      },
+      {
+        id: 2,
+        name: "Linen Notebook",
+        price: 9.5,
+        desc: "Hardcover notebook with 160 dotted pages.",
+        image: "https://images.unsplash.com/photo-1544816155-12df9643f363?w=400&auto=format&fit=crop&q=60"
+      },
+      {
+        id: 3,
+        name: "Soy Wax Candle",
+        price: 16.0,
+        desc: "Clean-burning cedarwood & lavender aroma.",
+        image: "https://images.unsplash.com/photo-1603006905003-be475563bc59?w=400&auto=format&fit=crop&q=60"
+      },
+      {
+        id: 4,
+        name: "Minimalist Pen",
+        price: 4.5,
+        desc: "Smooth gel rollerball with durable metal clip.",
+        image: "https://images.unsplash.com/photo-1585336261026-41829e19277d?w=400&auto=format&fit=crop&q=60"
+      }
+    ];
+
+    let cart = {};
+
+    // 2. Render Products
+    function renderProducts() {
+      const grid = document.getElementById("product-grid");
+      grid.innerHTML = products.map(p => `
+        <div class="card">
+          <img src="${p.image}" alt="${p.name}" class="card-img" loading="lazy" />
+          <div class="card-body">
+            <h3 class="card-title">${p.name}</h3>
+            <p class="card-desc">${p.desc}</p>
+            <div class="card-footer">
+              <span class="price">$${p.price.toFixed(2)}</span>
+              <button class="add-btn" onclick="addToCart(${p.id})">Add to Cart</button>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    // 3. Cart State Management
+    function addToCart(id) {
+      cart[id] = (cart[id] || 0) + 1;
+      updateCart();
+    }
+
+    function updateQuantity(id, delta) {
+      if (!cart[id]) return;
+      cart[id] += delta;
+      if (cart[id] <= 0) {
+        delete cart[id];
+      }
+      updateCart();
+    }
+
+    function updateCart() {
+      const list = document.getElementById("cart-items");
+      const badge = document.getElementById("cart-badge");
+      const totalEl = document.getElementById("cart-total");
+
+      const itemIds = Object.keys(cart);
+      let count = 0;
+      let total = 0;
+
+      if (itemIds.length === 0) {
+        list.innerHTML = `<li class="empty-cart-msg">Your cart is empty.</li>`;
+      } else {
+        list.innerHTML = itemIds.map(id => {
+          const product = products.find(p => p.id === parseInt(id));
+          const qty = cart[id];
+          count += qty;
+          total += product.price * qty;
+
+          return `
+            <li class="cart-item">
+              <div class="cart-item-details">
+                <div class="cart-item-title">${product.name}</div>
+                <div class="cart-item-price">$${product.price.toFixed(2)} each</div>
+              </div>
+              <div class="cart-controls">
+                <button class="qty-btn" onclick="updateQuantity(${product.id}, -1)">-</button>
+                <span>${qty}</span>
+                <button class="qty-btn" onclick="updateQuantity(${product.id}, 1)">+</button>
+              </div>
+            </li>
+          `;
+        }).join("");
+      }
+
+      badge.textContent = count;
+      totalEl.textContent = `$${total.toFixed(2)}`;
+    }
+
+    // 4. UI Actions
+    function toggleCart() {
+      document.getElementById("cart-drawer").classList.toggle("open");
+      document.getElementById("overlay").classList.toggle("open");
+    }
+
+    function checkout() {
+      const totalItems = Object.values(cart).reduce((sum, q) => sum + q, 0);
+      if (totalItems === 0) {
+        alert("Your cart is empty!");
+        return;
+      }
+      alert("Thank you for your order!");
+      cart = {};
+      updateCart();
+      toggleCart();
+    }
+
+    // Init
+    renderProducts();
+    updateCart();
+  </script>
+</body>
+</html>
